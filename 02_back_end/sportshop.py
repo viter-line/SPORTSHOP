@@ -1,0 +1,107 @@
+from fastapi import FastAPI
+from pydantic import BaseModel 
+import mysql.connector
+
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+class ProductBase(BaseModel):
+    name: str
+    category: str
+    size: str
+    price: float
+    rating: float
+    image_url: str
+    description: str
+    in_stock: bool
+
+class ProductResponse(ProductBase):
+    id: int
+
+    class Config:
+        from_attributes = True
+
+# DB connect
+db = mysql.connector.connect(
+    user = 'support',
+    password = 'password123',
+    host = 'localhost',
+    database = 'sportshop'
+)
+
+@app.get("/api/products")
+async def get_products(page: int = 1, limit: int = 8):
+    # Розраховуємо, скільки рядків пропустити
+    offset = (page - 1) * limit
+    
+    cursor = db.cursor(dictionary=True)
+    
+    # 1. Отримуємо обмежену кількість товарів
+    query = "SELECT * FROM products LIMIT %s OFFSET %s"
+    cursor.execute(query, (limit, offset))
+    products = cursor.fetchall()
+    
+    # 2. Отримуємо загальну кількість товарів (для розрахунку сторінок на фронті)
+    cursor.execute("SELECT COUNT(*) as total FROM products")
+    total_count = cursor.fetchone()['total']
+    
+    cursor.close()
+    
+    return {
+        "items": products,
+        "total": total_count,
+        "page": page,
+        "limit": limit,
+        "total_pages": (total_count + limit - 1) // limit
+    }
+
+@app.post("/api/create_product")
+async def create_product(product: ProductBase): 
+    cursor = db.cursor()
+    sql = """
+        INSERT INTO products (name, category, size, price, rating, image_url, description, in_stock) 
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+    """
+    values = (
+        product.name, product.category, product.size, product.price, 
+        product.rating, product.image_url, product.description, product.in_stock
+    )
+    
+    cursor.execute(sql, values)
+    db.commit()
+    cursor.close()
+    return {"message": "Product created successfully!"}
+
+@app.get("/api/products")
+async def get_products(page: int = 1, limit: int = 8):
+    # Розраховуємо, скільки рядків пропустити
+    offset = (page - 1) * limit
+    
+    cursor = db.cursor(dictionary=True)
+    
+    # 1. Отримуємо обмежену кількість товарів
+    query = "SELECT * FROM products LIMIT %s OFFSET %s"
+    cursor.execute(query, (limit, offset))
+    products = cursor.fetchall()
+    
+    # 2. Отримуємо загальну кількість товарів (для розрахунку сторінок на фронті)
+    cursor.execute("SELECT COUNT(*) as total FROM products")
+    total_count = cursor.fetchone()['total']
+    
+    cursor.close()
+    
+    return {
+        "items": products,
+        "total": total_count,
+        "page": page,
+        "limit": limit,
+        "total_pages": (total_count + limit - 1) // limit
+    }

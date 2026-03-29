@@ -1,0 +1,30 @@
+# --- General ---
+.DS_Store
+.vscode/
+.idea/
+*.log
+
+# --- Frontend (01_front_end) ---
+01_front_end/node_modules/
+01_front_end/.next/
+01_front_end/out/
+01_front_end/build/
+01_front_end/.env*.local
+01_front_end/.vercel/
+01_front_end/npm-debug.log*
+
+# --- Backend (02_back_end) ---
+02_back_end/__pycache__/
+02_back_end/*.py[cod]
+02_back_end/*$py.class
+02_back_end/venv/
+02_back_end/.venv/
+02_back_end/env/
+02_back_end/.env
+02_back_end/db.sqlite3
+02_back_end/.pytest_cache/
+
+# --- Databases & OS ---
+*.db
+*.sqlite
+.env

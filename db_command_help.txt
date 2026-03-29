@@ -1,0 +1,72 @@
+Підключення бази даних:
+mysql -u username -p – підключення до MySQL-сервера від імені вказаного користувача;
+mysql -u username -p databasename – підключення до бази даних від імені її користувача;
+exit – обірвати з’єднання з MySQL-сервером та вийти;
+
+Створення:
+CREATE DATABASCREATE DATABASE databasename;– створити базу даних за вказаним іменем;
+SHOW CREATE DATABASE databasename;– створити базу даних за вказаним іменем та показати параметри;
+CREATE DATABASE `databasename` CHARACTER SET utf8 COLLATE utf8_general_ci; – створення бази даних за вказаним кодуванням;
+CREATE USER 'username'@'localhost' IDENTIFIED BY 'userpassword';– створити користувача бази даних з іменем і паролем;
+GRANT ALL PRIVILEGES ON databasename.table_of_database TO 'username'@'localhost';– надати користувачу права доступа до бази даних і її таблиці;
+GRANT ALL PRIVILEGES ON *.* TO 'username'@'localhost';– надати користувачу права доступу до усіх баз даних і таблиць;
+GRANT ALL PRIVILEGES ON databasename.* TO 'username'@'localhost';– надати користувачу права доступу до усіх таблиць тільки заданої бази даних;
+GRANT SELECT, INSERT, DELETE ON databasename.* TO 'username'@'localhost'; – надати користувачу обмежені права доступу з можливістю обрати базу даних, вставляти і видаляти рядки в таблицях;
+FLUSH PRIVILEGES; – застосувати надані користувачам права, аби вони вступили в силу негайно;
+REVOKE ALL PRIVILEGES ON databasename.* TO 'username'@'localhost'; – відмінити усі права доступу до вказаної бази даних і усіх її таблиць для заданого користувача.
+
+Перегляд:
+SHOW DATABASES; – показати усі бази даних;
+USE databasename; – перейти до вказаної бази даних;
+SHOW TABLES; – показати усі таблиці поточної бази даних;
+SELECT * FROM tablename; – показати вміст вказаної таблиці бази даних;
+SELECT User FROM mysql.user; – вивести на екран усіх користувачів MySQL;
+SELECT User, Host FROM mysql.user; – вивести на екран усіх користувачів MySQL і їх хости;
+SELECT User, Host, Password FROM mysql.user; – вивести на екран усіх користувачів MySQL, їх хости і паролі (можна також додати інші параметри);
+SHOW GRANTS; – перегляд усіх привілегій активного користувача;
+SHOW GRANTS FOR 'username'@'localhost'; – показати права доступу для вказаного користувача;
+DESCRIBE table_database; – дізнатися які стовпці містяться в таблиці бази даних і їх тип;
+SELECT DISTINCT name FROM tablename; – отримати список унікальних назв з таблиці бази даних без дублів;
+SELECT name, COUNT(*)FROM tablenameGROUP BY name; – відсортувати записи з таблиці бази даних за вказаним ім’ям;
+SELECT *FROM tablenameORDER BY published_date ASC; – відсортувати за зростанням (DESC – спаданням);
+SELECT name, COUNT(*)FROM tablenameGROUP BY nameHAVING name LIKE '%Hack%'; – відсортувати записи з таблиці бази даних за назвою, яка містить задане слово;
+SELECT *FROM tablenameWHERE description LIKE "%Franko%"; – обрати запис в стопці таблиці бази даних description із заданим словом;
+SELECT * FROM tablename WHERE category = "Offensive Security" AND name = "Bug Bounty Bootcamp"; – обрати стовпці зі заданами значеннями використовуючи оператор AND.
+SELECT * FROM tablename WHERE name LIKE "%Android%" OR name LIKE "%iOS%"; – вибір стовпців використовуючи оператор OR;
+SELECT * FROM tablename WHERE NOT description LIKE "%guide%"; – аналогічна операція, тільки тут застосовується оператор NOT;
+SELECT * FROM tablename WHERE id BETWEEN 2 AND 4; – пошук з допомогою оператора BETWEEN.
+SELECT * FROM tablename WHERE name = "Designing Secure Software"; – пошук з допомогою оператора “=”;
+SELECT * FROM tablename WHERE category != "Offensive Security"; – пошук з допомогою оператора “не дорівнює”;
+SELECT * FROM tablename WHERE published_date < "2025-01-01"; – пошук історичних записів з допомогою операторів “менше-більше”, а  також “<=” та “>=”.
+
+Зміна:
+CREATE TABLE example_table_name (example_column1 data_type,example_column2 data_type,example_column3 data_type); – створення таблиці бази даних з відповідними колонками;
+ALTER TABLE table_databaseADD new_column INT; – додавання до таблиці бази даних нової колонки з типом даних Integer;
+ALTER TABLE tablename DROP INDEX columnname; – видалити стовпчик (колонку) заданої бази даних;
+INSERT INTO table_books (id, name, published_date, description)VALUES (1, "Grushevskyi History", "2024-10-14", "Grushevsky all book history"); – додавання нового рядка в таблицю бази даних з вказаним списком стовбців і їх значеннями;
+RENAME TABLE tablename TO newtablename; – переіменувати таблицю бази даних;
+UPDATE booksSET description = "An In-Depth Guide to Android's Security Architecture."WHERE id = 1; – оновлення даних в таблиці бази даних, зміна значення в стовпці.
+
+Видалення:
+DROP DATABASE databasename; – видалити базу даних;
+DROP USER 'username'@'localhost'; – видалити користувача бази даних;
+SET PASSWORD FOR 'username'@'localhost' = PASSWORD('newpassword'); – встановити пароль для користувача бази даних;
+TRUNCATE TABLE Tablename; – повне видалення вмісту таблиці бази даних;
+DELETE FROM tablename WHERE fieldname = 'name'; – видалити рядок із вказаної таблиці.
+
+Резервне копіювання:
+mysqldump -u username -p databasename > dump_file.sql – створення резервної копії бази даних (створення дампа);
+mysqldump -u root -p -B dbname1 dbname2 > dump.sql – створення дампу вказаних баз даних;
+mysqldump -u root -p -A > dump.sql – дамп усіх баз даних;
+mysql -u root -p namedatabase < dump_file.sql – імпорт дампу бази даних;
+SHOW GLOBAL STATUS; – вивести на екран статистику MySQL-бази даних.
+
+Функції:
+SELECT CONCAT(name, " is a type of ", category, " book.") AS book_info FROM books; – функція використовується для додавання двох або більше рядків разом. Корисно поєднувати текст з різних колонок;
+SELECT category, GROUP_CONCAT(name SEPARATOR ", ") AS books FROM books GROUP BY category; – функція може допомогти нам об’єднати дані з кількох рядків в одне поле. Розглянемо приклад його використання;
+SELECT SUBSTRING(published_date, 1, 4) AS published_year FROM books; – функція отримає підрядок із рядка в запиті, починаючи з визначеної позиції. Також можна вказати довжину цього підрядка;
+SELECT LENGTH(name) AS name_length FROM books; – функція повертає кількість символів у рядку. Це включає пробіли та розділові знаки. Нижче ми можемо навести приклад;
+SELECT COUNT(*) AS total_books FROM books; – повертає кількість записів у виразі, як показано в наведеному нижче прикладі;
+SELECT SUM(price) AS total_price FROM books; – підсумовує всі значення (не NULL) визначеного стовпця;
+SELECT MAX(published_date) AS latest_book FROM books; – обчислює максимальне значення в наданому стовпці виразу;
+SELECT MIN(published_date) AS earliest_book FROM books; – обчислює мінімальне значення в наданому стовпці виразу.
