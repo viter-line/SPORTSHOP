@@ -2,28 +2,47 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Search, ChevronDown, ListFilter } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 export default function FilterBar() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Функція для оновлення URL параметрів без перезавантаження сторінки
+  // 1. Локальний стан для пошуку (щоб не робити запити на кожну літеру)
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
+
+  // 2. Дебаунс для пошуку: чекаємо 500мс після зупинки вводу перед оновленням URL
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      // Оновлюємо тільки якщо значення змінилося в порівнянні з URL
+      if (searchTerm !== (searchParams.get('search') || '')) {
+        updateFilters('search', searchTerm);
+      }
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchTerm]);
+
+  // 3. Універсальна функція оновлення фільтрів
   const updateFilters = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
+    
     if (value && value !== 'all') {
       params.set(key, value);
     } else {
       params.delete(key);
     }
-    // Скидаємо сторінку на 1 при зміні фільтрів
+    
+    // При будь-якій зміні фільтрів скидаємо на 1 сторінку
     params.set('page', '1'); 
-    router.push(`?${params.toString()}`);
+    
+    router.push(`?${params.toString()}`, { scroll: false });
   };
 
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-wrap items-end gap-6">
       
-      {/* 1. Пошук за назвою */}
+      {/* 1. Пошук за назвою (З дебаунсом) */}
       <div className="flex-1 min-w-[250px]">
         <label className="text-[11px] font-bold text-purple-700 uppercase tracking-wider mb-2 block ml-1">
           Пошук товару
@@ -33,9 +52,9 @@ export default function FilterBar() {
           <input 
             type="text" 
             placeholder="Назва або бренд..."
-            defaultValue={searchParams.get('search') || ''}
-            className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-100 focus:border-purple-400 outline-none transition-all"
-            onChange={(e) => updateFilters('search', e.target.value)}
+            value={searchTerm}
+            className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-100 focus:border-purple-400 outline-none transition-all text-black"
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
       </div>
@@ -47,15 +66,15 @@ export default function FilterBar() {
         </label>
         <div className="relative">
           <select 
-            className="w-full appearance-none bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 outline-none focus:border-purple-400 cursor-pointer"
+            className="w-full appearance-none bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 outline-none focus:border-purple-400 cursor-pointer text-black"
             value={searchParams.get('category') || 'all'}
             onChange={(e) => updateFilters('category', e.target.value)}
           >
             <option value="all">Усі товари</option>
-            <option value="shoes">Взуття</option>
-            <option value="clothing">Одяг</option>
-            <option value="equipment">Спорядження</option>
-            <option value="accessories">Аксесуари</option>
+            <option value="Shoes">Взуття</option>
+            <option value="Clothing">Одяг</option>
+            <option value="Equipment">Спорядження</option>
+            <option value="Accessories">Аксесуари</option>
           </select>
           <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
         </div>
@@ -68,35 +87,33 @@ export default function FilterBar() {
         </label>
         <div className="relative">
           <select 
-            className="w-full appearance-none bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 outline-none focus:border-purple-400 cursor-pointer"
+            className="w-full appearance-none bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 outline-none focus:border-purple-400 cursor-pointer text-black"
             value={searchParams.get('sort_by') || 'name'}
             onChange={(e) => updateFilters('sort_by', e.target.value)}
           >
             <option value="name">Назва (А-Я)</option>
-            <option value="price_asc">Розмір</option>
             <option value="price_asc">Ціна: від дешевих</option>
             <option value="price_desc">Ціна: від дорогих</option>
             <option value="rating">Рейтинг</option>
-            <option value="stock">Наявність</option>
           </select>
           <ListFilter className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
         </div>
       </div>
 
-      {/* 4. Кількість на сторінці */}
+      {/* 4. Кількість на сторінці (Limit) */}
       <div className="w-24">
         <label className="text-[11px] font-bold text-purple-700 uppercase tracking-wider mb-2 block ml-1 text-center">
           Показати
         </label>
         <select 
-          className="w-full bg-gray-50 border border-gray-200 rounded-xl px-2 py-2.5 outline-none focus:border-purple-400 text-center"
-          value={searchParams.get('limit') || '12'}
+          className="w-full bg-gray-50 border border-gray-200 rounded-xl px-2 py-2.5 outline-none focus:border-purple-400 text-center text-black"
+          value={searchParams.get('limit') || '8'}
           onChange={(e) => updateFilters('limit', e.target.value)}
         >
-          <option value="12">6</option>
+          <option value="4">4</option>
+          <option value="8">8</option>
           <option value="12">12</option>
           <option value="24">24</option>
-          <option value="48">48</option>
         </select>
       </div>
 
