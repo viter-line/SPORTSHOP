@@ -65,7 +65,7 @@ export default function Header() {
 
         {/* Права частина: Кошик та Адмін */}
         <div className="flex items-center gap-4 sm:gap-6 shrink-0">
-          <Link href="/cart" className="relative p-2 text-gray-600 hover:text-purple-600 transition-colors group flex items-center">
+          <Link href="/shop/cart" className="relative p-2 text-gray-600 hover:text-purple-600 transition-colors group flex items-center">
             <ShoppingBag size={22} strokeWidth={2.5} />
             
             {/* Відображаємо лічильник тільки ПІСЛЯ монтажу компонента (mounted === true) */}

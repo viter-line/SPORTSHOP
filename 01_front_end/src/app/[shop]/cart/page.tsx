@@ -1,99 +1,132 @@
 'use client'
 
-import { useCartStore } from '../../store/useCartStore';
-import Image from 'next/image';
+import { useCartStore } from '@/app/store/useCartStore';
 import Link from 'next/link';
-import { Trash2, Plus, Minus, ArrowLeft, ShoppingBag } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import Image from 'next/image';
+import { Trash2, Plus, Minus, ArrowLeft, ShoppingBag, CreditCard } from 'lucide-react';
 
 export default function CartPage() {
   const { items, removeFromCart, updateQuantity, clearCart } = useCartStore();
-  const [mounted, setMounted] = useState(false);
 
-  useEffect(() => { setMounted(true); }, []);
-
-  const total = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
-
-  if (!mounted) return null;
+  const totalPrice = items.reduce((total, item) => total + item.price * item.quantity, 0);
 
   if (items.length === 0) {
     return (
-      <div className="max-w-7xl mx-auto px-6 py-24 flex flex-col items-center justify-center text-center">
-        <div className="w-32 h-32 bg-gray-100 rounded-full flex items-center justify-center mb-8">
-          <ShoppingBag size={48} className="text-gray-300" />
+      <div className="max-w-7xl mx-auto px-6 py-32 text-center">
+        <div className="inline-flex items-center justify-center w-24 h-24 bg-purple-50 rounded-[2rem] mb-8 text-purple-600">
+          <ShoppingBag size={40} />
         </div>
-        <h1 className="text-3xl font-black text-gray-900 mb-4">Ваш кошик порожній</h1>
-        <p className="text-gray-500 max-w-sm mb-10">Здається, ви ще нічого не додали. Оберіть найкращі товари на головній сторінці.</p>
-        <Link href="/" className="bg-purple-600 text-white px-10 py-4 rounded-2xl font-bold hover:bg-pink-500 transition-all shadow-lg shadow-purple-100">
-          Повернутися до покупок
+        <h1 className="text-4xl font-black mb-4 text-gray-950">Кошик порожній</h1>
+        <p className="text-gray-400 mb-10 max-w-sm mx-auto font-medium leading-relaxed">
+          Час наповнити його стильними речами з нашої нової колекції!
+        </p>
+        <Link 
+          href="/shop" 
+          className="bg-gray-950 text-white px-10 py-5 rounded-[2rem] font-black uppercase text-xs tracking-[0.2em] hover:bg-purple-600 transition-all shadow-2xl shadow-purple-100 active:scale-95"
+        >
+          Повернутися в магазин
         </Link>
       </div>
     );
   }
 
   return (
-    <main className="max-w-7xl mx-auto px-6 py-12">
-      <Link href="/" className="inline-flex items-center gap-2 text-sm font-bold text-gray-400 hover:text-purple-600 mb-10 transition-colors">
-        <ArrowLeft size={16} /> Назад до каталогу
-      </Link>
+    <main className="max-w-7xl mx-auto px-6 py-10">
+      <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+        <div>
+          <Link href="/shop" className="inline-flex items-center gap-2 text-gray-400 hover:text-black mb-6 transition-colors font-black uppercase text-[10px] tracking-[0.2em]">
+            <ArrowLeft size={14} strokeWidth={3} />
+            Назад до покупок
+          </Link>
+          <h1 className="text-5xl font-black text-gray-950 tracking-tighter">Кошик</h1>
+        </div>
+        <button 
+          onClick={clearCart}
+          className="text-red-400 hover:text-red-600 text-[10px] font-black uppercase tracking-widest transition-colors flex items-center gap-2 bg-red-50 px-4 py-2 rounded-xl"
+        >
+          <Trash2 size={14} /> Очистити все
+        </button>
+      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
         {/* Список товарів */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-3xl font-black text-gray-900">Кошик</h1>
-            <button onClick={clearCart} className="text-xs font-bold text-red-400 uppercase tracking-widest hover:text-red-600 transition-colors">Очистити все</button>
-          </div>
-
+        <div className="lg:col-span-2 space-y-4">
           {items.map((item) => (
-            <div key={item.id} className="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100 flex flex-col sm:flex-row items-center gap-6">
-              <div className="relative w-32 h-32 rounded-2xl overflow-hidden bg-gray-50 shrink-0">
-                <Image src={item.image_url} alt={item.name} fill className="object-cover" />
+            <div key={item.id} className="flex flex-col sm:flex-row items-center gap-8 bg-white p-6 rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-xl hover:shadow-gray-100 transition-all duration-500">
+              <div className="relative w-32 h-32 bg-gray-50 rounded-[2rem] overflow-hidden flex-shrink-0 group">
+                <Image 
+                  src={item.image_url || '/placeholder.png'} 
+                  alt={item.name} 
+                  fill 
+                  className="object-contain p-4 group-hover:scale-110 transition-transform duration-500"
+                />
               </div>
-              
+
               <div className="flex-grow text-center sm:text-left">
-                <span className="text-[10px] font-bold text-purple-600 uppercase tracking-widest">{item.category}</span>
-                <h3 className="text-lg font-bold text-gray-900 mb-1">{item.name}</h3>
-                <p className="text-xl font-black text-gray-950">${item.price}</p>
+                <p className="text-purple-600 text-[10px] font-black uppercase tracking-[0.2em] mb-2">
+                  {item.category}
+                </p>
+                <h3 className="font-bold text-2xl text-gray-950 mb-4">{item.name}</h3>
+                <div className="text-3xl font-black text-gray-950">₴{item.price}</div>
               </div>
 
-              <div className="flex items-center gap-4 bg-gray-50 p-2 rounded-2xl border border-gray-100">
-                <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="w-10 h-10 flex items-center justify-center bg-white rounded-xl shadow-sm hover:text-purple-600 transition-all"><Minus size={16}/></button>
-                <span className="w-8 text-center font-black">{item.quantity}</span>
-                <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="w-10 h-10 flex items-center justify-center bg-white rounded-xl shadow-sm hover:text-purple-600 transition-all"><Plus size={16}/></button>
+              <div className="flex items-center gap-4 bg-gray-100/50 p-2 rounded-2xl border border-gray-100">
+                <button 
+                  onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                  className="w-10 h-10 flex items-center justify-center bg-white rounded-xl shadow-sm hover:text-purple-600 transition-all active:scale-90"
+                >
+                  <Minus size={16} strokeWidth={3} />
+                </button>
+                <span className="w-8 text-center font-black text-gray-950 text-lg">{item.quantity}</span>
+                <button 
+                  onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                  className="w-10 h-10 flex items-center justify-center bg-white rounded-xl shadow-sm hover:text-purple-600 transition-all active:scale-90"
+                >
+                  <Plus size={16} strokeWidth={3} />
+                </button>
               </div>
 
-              <button onClick={() => removeFromCart(item.id)} className="p-4 text-gray-300 hover:text-red-500 transition-colors">
-                <Trash2 size={24} />
+              <button 
+                onClick={() => removeFromCart(item.id)}
+                className="p-4 text-gray-200 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all group"
+              >
+                <Trash2 size={24} className="group-hover:rotate-12 transition-transform" />
               </button>
             </div>
           ))}
         </div>
 
-        {/* Разом */}
+        {/* Підсумок замовлення */}
         <div className="lg:col-span-1">
-          <div className="bg-white p-8 rounded-[2.5rem] shadow-xl border border-gray-100 sticky top-28">
-            <h2 className="text-xl font-bold mb-8 text-gray-900">Підсумок замовлення</h2>
+          <div className="bg-gray-950 text-white p-10 rounded-[3rem] shadow-2xl shadow-gray-200 border-t-8 border-purple-600">
+            <h2 className="text-2xl font-black mb-10 tracking-tight">Ваш чек</h2>
             
-            <div className="space-y-4 mb-8">
-              <div className="flex justify-between text-gray-500 font-medium">
-                <span>Кількість товарів</span>
-                <span>{items.length}</span>
+            <div className="space-y-6 mb-10">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500 font-bold uppercase text-[10px] tracking-widest">Товари ({items.length})</span>
+                <span className="font-black text-lg">₴{totalPrice}</span>
               </div>
-              <div className="flex justify-between text-gray-500 font-medium">
-                <span>Доставка</span>
-                <span className="text-green-600 font-bold uppercase text-xs">Безкоштовно</span>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500 font-bold uppercase text-[10px] tracking-widest">Доставка</span>
+                <span className="text-green-400 font-black text-[10px] uppercase tracking-widest px-3 py-1 bg-green-400/10 rounded-full">Безкоштовно</span>
               </div>
-              <div className="h-[1px] bg-gray-100 my-4"></div>
-              <div className="flex justify-between items-end">
-                <span className="font-bold text-gray-900">Разом:</span>
-                <span className="text-3xl font-black text-purple-600">${total.toFixed(2)}</span>
+              
+              <div className="h-px bg-white/10 my-4" />
+              
+              <div className="flex justify-between items-end pt-2">
+                <span className="text-gray-500 font-bold uppercase text-[10px] tracking-[0.2em] mb-2">Всього до сплати</span>
+                <span className="text-5xl font-black tracking-tighter text-white">₴{totalPrice}</span>
               </div>
             </div>
 
-            <button className="w-full bg-gray-950 text-white py-5 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-purple-600 transition-all shadow-xl shadow-gray-100 active:scale-[0.98]">
-              Оформити замовлення
+            <button className="w-full bg-purple-600 text-white py-6 rounded-[2rem] font-black text-xl flex items-center justify-center gap-4 hover:bg-purple-500 transition-all active:scale-95 shadow-xl shadow-purple-900/40">
+              <CreditCard size={24} strokeWidth={2.5} />
+              Оформити
             </button>
+            
+            <p className="text-center text-gray-500 text-[10px] font-bold uppercase tracking-widest mt-8">
+              Безпечна оплата через LiqPay / Mono
+            </p>
           </div>
         </div>
       </div>

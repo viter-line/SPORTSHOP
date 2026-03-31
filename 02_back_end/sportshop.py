@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel 
 import mysql.connector
 
@@ -56,9 +56,9 @@ async def get_products(
     # сортуємо за алфавітом, ціною, рейтингом
     sort_map = {
         "name": "ORDER BY name ASC",
-        "price_asc": "ORDER BY price ASC",    # розібратись, не фуричить
-        "price_desc": "ORDER BY price DESC",  # розібратись, не фуричить
-        "rating": "ORDER BY rating DESC"      # розібратись, не фуричить
+        "price_asc": "ORDER BY price ASC",    
+        "price_desc": "ORDER BY price DESC",  
+        "rating": "ORDER BY rating DESC"      
     }
     
     # сорт за назвою
@@ -103,5 +103,23 @@ async def create_product(product: ProductBase):
     
     cursor.execute(sql, values)
     db.commit()
+    
     cursor.close()
     return {"message": "Product created successfully!"}
+
+
+# сторінка продукту
+@app.get("/api/products/{product_id}")
+async def get_product(product_id: int):
+    cursor = db.cursor(dictionary=True)
+    try:
+        query = "SELECT * FROM products WHERE id = %s"
+        cursor.execute(query, (product_id,))
+        product = cursor.fetchone()
+        
+        if not product:
+            raise HTTPException(status_code=404, detail="Товар не знайдено")
+            
+        return product
+    finally:
+        cursor.close()
