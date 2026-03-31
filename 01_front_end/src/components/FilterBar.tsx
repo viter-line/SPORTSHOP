@@ -8,13 +8,12 @@ export default function FilterBar() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // 1. Локальний стан для пошуку (щоб не робити запити на кожну літеру)
+  // Локальний стан для тексту пошуку (Debounce)
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
 
-  // 2. Дебаунс для пошуку: чекаємо 500мс після зупинки вводу перед оновленням URL
+  // Дебаунс ефект для пошуку
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
-      // Оновлюємо тільки якщо значення змінилося в порівнянні з URL
       if (searchTerm !== (searchParams.get('search') || '')) {
         updateFilters('search', searchTerm);
       }
@@ -23,7 +22,6 @@ export default function FilterBar() {
     return () => clearTimeout(delayDebounceFn);
   }, [searchTerm]);
 
-  // 3. Універсальна функція оновлення фільтрів
   const updateFilters = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
     
@@ -33,7 +31,7 @@ export default function FilterBar() {
       params.delete(key);
     }
     
-    // При будь-якій зміні фільтрів скидаємо на 1 сторінку
+    // Завжди скидаємо на першу сторінку при зміні будь-якого фільтра
     params.set('page', '1'); 
     
     router.push(`?${params.toString()}`, { scroll: false });
@@ -42,7 +40,7 @@ export default function FilterBar() {
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-wrap items-end gap-6">
       
-      {/* 1. Пошук за назвою (З дебаунсом) */}
+      {/* 1. Пошук */}
       <div className="flex-1 min-w-[250px]">
         <label className="text-[11px] font-bold text-purple-700 uppercase tracking-wider mb-2 block ml-1">
           Пошук товару
@@ -59,7 +57,7 @@ export default function FilterBar() {
         </div>
       </div>
 
-      {/* 2. Фільтр за категорією */}
+      {/* 2. Категорія */}
       <div className="w-full sm:w-48">
         <label className="text-[11px] font-bold text-purple-700 uppercase tracking-wider mb-2 block ml-1">
           Категорія
@@ -71,10 +69,10 @@ export default function FilterBar() {
             onChange={(e) => updateFilters('category', e.target.value)}
           >
             <option value="all">Усі товари</option>
-            <option value="ВЗУТТЯ">Взуття</option>
-            <option value="ОДЯГ">Одяг</option>
-            <option value="СПОРЯДЖЕННЯ">Спорядження</option>
-            <option value="АКСЕСУАРИ">Аксесуари</option>
+            <option value="взуття">Взуття</option>
+            <option value="одяг">Одяг</option>
+            <option value="спорядження">Спорядження</option>
+            <option value="аксесуари">Аксесуари</option>
           </select>
           <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
         </div>
@@ -100,7 +98,7 @@ export default function FilterBar() {
         </div>
       </div>
 
-      {/* 4. Кількість на сторінці (Limit) */}
+      {/* 4. Ліміт */}
       <div className="w-24">
         <label className="text-[11px] font-bold text-purple-700 uppercase tracking-wider mb-2 block ml-1 text-center">
           Показати
