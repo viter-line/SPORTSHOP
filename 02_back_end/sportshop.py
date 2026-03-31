@@ -35,31 +35,46 @@ db = mysql.connector.connect(
 
 # витягуємо продукти з БД (по кількості і опису)
 @app.get("/api/products")
-async def get_products(page: int = 1, limit: int = 8, search: str = "", category: Optional[str] = None):
-    # пропускуємо стільки рядків
+async def get_products(
+    page: int = 1, 
+    limit: int = 8, 
+    search: str = "", 
+    category: Optional[str] = None,
+    sort_by: str = "name"
+):
     offset = (page - 1) * limit
     cursor = db.cursor(dictionary=True)
     
-    # запит до БД
+    # Пошук + Категорія
     query = "SELECT * FROM products WHERE (name LIKE %s OR description LIKE %s)"
     params = [f"%{search}%", f"%{search}%"]
 
-    # фільтр за категорією  (якщо категорія не вибрана і це не "all")
     if category and category != "all":
         query += " AND category = %s"
         params.append(category)
 
-    # додаємо ліміт та зміщення
+    # сортуємо за алфавітом, ціною, рейтингом
+    sort_map = {
+        "name": "ORDER BY name ASC",
+        "price_asc": "ORDER BY price ASC",    # розібратись, не фуричить
+        "price_desc": "ORDER BY price DESC",  # розібратись, не фуричить
+        "rating": "ORDER BY rating DESC"      # розібратись, не фуричить
+    }
+    
+    # сорт за назвою
+    order_clause = sort_map.get(sort_by, "ORDER BY name ASC")
+    query += f" {order_clause}"
+
+    # пагінація сторінок
     query += " LIMIT %s OFFSET %s"
     params.extend([limit, offset])
     
     cursor.execute(query, tuple(params))
     products = cursor.fetchall()
     
-    # загальна кількість для пагінації (з врахуванням категорії)
+    # кількість сторінок для пагінаці
     count_query = "SELECT COUNT(*) as total FROM products WHERE (name LIKE %s OR description LIKE %s)"
     count_params = [f"%{search}%", f"%{search}%"]
-    
     if category and category != "all":
         count_query += " AND category = %s"
         count_params.append(category)
