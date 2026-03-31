@@ -71,10 +71,10 @@ export default function FilterBar() {
             onChange={(e) => updateFilters('category', e.target.value)}
           >
             <option value="all">Усі товари</option>
-            <option value="Shoes">Взуття</option>
-            <option value="Clothing">Одяг</option>
-            <option value="Equipment">Спорядження</option>
-            <option value="Accessories">Аксесуари</option>
+            <option value="ВЗУТТЯ">Взуття</option>
+            <option value="ОДЯГ">Одяг</option>
+            <option value="СПОРЯДЖЕННЯ">Спорядження</option>
+            <option value="АКСЕСУАРИ">Аксесуари</option>
           </select>
           <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
         </div>
