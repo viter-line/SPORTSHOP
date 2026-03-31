@@ -2,6 +2,8 @@ from fastapi import FastAPI
 from pydantic import BaseModel 
 import mysql.connector
 
+from typing import Optional
+
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
@@ -33,20 +35,36 @@ db = mysql.connector.connect(
 
 # витягуємо продукти з БД (по кількості і опису)
 @app.get("/api/products")
-async def get_products(page: int = 1, limit: int = 8, search: str = ""):
+async def get_products(page: int = 1, limit: int = 8, search: str = "", category: Optional[str] = None):
     # пропускуємо стільки рядків
     offset = (page - 1) * limit
     cursor = db.cursor(dictionary=True)
     
-    # витягуємо стільки товарів
-    query = "SELECT * FROM products WHERE name LIKE %s OR description LIKE %s LIMIT %s OFFSET %s"
-    search_param = f"%{search}%"
-    cursor.execute(query, (search_param, search_param, limit, offset))
+    # запит до БД
+    query = "SELECT * FROM products WHERE (name LIKE %s OR description LIKE %s)"
+    params = [f"%{search}%", f"%{search}%"]
+
+    # фільтр за категорією  (якщо категорія не вибрана і це не "all")
+    if category and category != "all":
+        query += " AND category = %s"
+        params.append(category)
+
+    # додаємо ліміт та зміщення
+    query += " LIMIT %s OFFSET %s"
+    params.extend([limit, offset])
+    
+    cursor.execute(query, tuple(params))
     products = cursor.fetchall()
     
-    # сторінок буде от стільки (правда ще момент - але з ним пізніше розберемось)
-    count_query = "SELECT COUNT(*) as total FROM products WHERE name LIKE %s"
-    cursor.execute(count_query, (search_param,))
+    # загальна кількість для пагінації (з врахуванням категорії)
+    count_query = "SELECT COUNT(*) as total FROM products WHERE (name LIKE %s OR description LIKE %s)"
+    count_params = [f"%{search}%", f"%{search}%"]
+    
+    if category and category != "all":
+        count_query += " AND category = %s"
+        count_params.append(category)
+        
+    cursor.execute(count_query, tuple(count_params))
     total_count = cursor.fetchone()['total']
     cursor.close()
     
