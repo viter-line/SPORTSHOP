@@ -23,13 +23,13 @@ class ProductBase(BaseModel):
     description: str
     in_stock: bool
 
-class ProductResponse(ProductBase):
-    id: int
+# class ProductResponse(ProductBase):
+#     id: int
 
-    class Config:
-        from_attributes = True
+#     class Config:
+#         from_attributes = True
 
-# DB connect
+# БД
 db = mysql.connector.connect(
     user = 'support',
     password = 'password123',
@@ -37,19 +37,20 @@ db = mysql.connector.connect(
     database = 'sportshop'
 )
 
+# витягуємо продукти з БД (по кількості)
 @app.get("/api/products")
 async def get_products(page: int = 1, limit: int = 8):
-    # Розраховуємо, скільки рядків пропустити
+    # пропускуємо стільки рядків
     offset = (page - 1) * limit
     
     cursor = db.cursor(dictionary=True)
     
-    # 1. Отримуємо обмежену кількість товарів
+    # витягуємо стільки товарів
     query = "SELECT * FROM products LIMIT %s OFFSET %s"
     cursor.execute(query, (limit, offset))
     products = cursor.fetchall()
     
-    # 2. Отримуємо загальну кількість товарів (для розрахунку сторінок на фронті)
+    # сторінок буде от стільки (правда ще момент - але з ним пізніше розберемось)
     cursor.execute("SELECT COUNT(*) as total FROM products")
     total_count = cursor.fetchone()['total']
     
@@ -63,6 +64,7 @@ async def get_products(page: int = 1, limit: int = 8):
         "total_pages": (total_count + limit - 1) // limit
     }
 
+# додаємо продукти до БД (Postman)
 @app.post("/api/create_product")
 async def create_product(product: ProductBase): 
     cursor = db.cursor()
@@ -79,29 +81,3 @@ async def create_product(product: ProductBase):
     db.commit()
     cursor.close()
     return {"message": "Product created successfully!"}
-
-@app.get("/api/products")
-async def get_products(page: int = 1, limit: int = 8):
-    # Розраховуємо, скільки рядків пропустити
-    offset = (page - 1) * limit
-    
-    cursor = db.cursor(dictionary=True)
-    
-    # 1. Отримуємо обмежену кількість товарів
-    query = "SELECT * FROM products LIMIT %s OFFSET %s"
-    cursor.execute(query, (limit, offset))
-    products = cursor.fetchall()
-    
-    # 2. Отримуємо загальну кількість товарів (для розрахунку сторінок на фронті)
-    cursor.execute("SELECT COUNT(*) as total FROM products")
-    total_count = cursor.fetchone()['total']
-    
-    cursor.close()
-    
-    return {
-        "items": products,
-        "total": total_count,
-        "page": page,
-        "limit": limit,
-        "total_pages": (total_count + limit - 1) // limit
-    }
