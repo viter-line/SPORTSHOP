@@ -23,12 +23,6 @@ class ProductBase(BaseModel):
     description: str
     in_stock: bool
 
-# class ProductResponse(ProductBase):
-#     id: int
-
-#     class Config:
-#         from_attributes = True
-
 # БД
 db = mysql.connector.connect(
     user = 'support',
@@ -37,30 +31,27 @@ db = mysql.connector.connect(
     database = 'sportshop'
 )
 
-# витягуємо продукти з БД (по кількості)
+# витягуємо продукти з БД (по кількості і опису)
 @app.get("/api/products")
-async def get_products(page: int = 1, limit: int = 8):
+async def get_products(page: int = 1, limit: int = 8, search: str = ""):
     # пропускуємо стільки рядків
     offset = (page - 1) * limit
-    
     cursor = db.cursor(dictionary=True)
     
     # витягуємо стільки товарів
-    query = "SELECT * FROM products LIMIT %s OFFSET %s"
-    cursor.execute(query, (limit, offset))
+    query = "SELECT * FROM products WHERE name LIKE %s OR description LIKE %s LIMIT %s OFFSET %s"
+    search_param = f"%{search}%"
+    cursor.execute(query, (search_param, search_param, limit, offset))
     products = cursor.fetchall()
     
     # сторінок буде от стільки (правда ще момент - але з ним пізніше розберемось)
-    cursor.execute("SELECT COUNT(*) as total FROM products")
+    count_query = "SELECT COUNT(*) as total FROM products WHERE name LIKE %s"
+    cursor.execute(count_query, (search_param,))
     total_count = cursor.fetchone()['total']
-    
     cursor.close()
     
     return {
         "items": products,
-        "total": total_count,
-        "page": page,
-        "limit": limit,
         "total_pages": (total_count + limit - 1) // limit
     }
 
