@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image';
+import Link from 'next/link'; // Додаємо Link
 import { Star, ShoppingCart, CheckCircle, XCircle } from 'lucide-react';
 import { Product } from '@/app/types';
 import { useCartStore } from '@/app/store/useCartStore';
@@ -10,8 +11,9 @@ export default function ProductCard({ product }: { product: Product }) {
 
   return (
     <div className="bg-white rounded-[2.5rem] p-5 shadow-sm hover:shadow-2xl transition-all duration-500 border border-gray-100 flex flex-col group h-full">
-      {/* Зображення з бейджем рейтингу */}
-      <div className="relative aspect-square rounded-[2rem] overflow-hidden mb-6 bg-gray-50">
+      
+      {/* Робимо зображення клікабельним */}
+      <Link href={`/products/${product.id}`} className="relative aspect-square rounded-[2rem] overflow-hidden mb-6 bg-gray-50 block">
         <Image 
           src={product.image_url} 
           alt={product.name} 
@@ -26,23 +28,27 @@ export default function ProductCard({ product }: { product: Product }) {
             {product.rating}
           </div>
         </div>
-      </div>
+      </Link>
 
       <div className="flex-grow flex flex-col px-1">
         <div className="mb-5">
           <span className="text-[10px] font-black text-purple-600 uppercase tracking-[0.2em] mb-2 block">
             {product.category}
           </span>
-          <h3 className="text-xl font-bold text-gray-900 leading-tight group-hover:text-purple-600 transition-colors">
-            {product.name}
-          </h3>
+          
+          {/* Назва теж веде на сторінку товару */}
+          <Link href={`/products/${product.id}`}>
+            <h3 className="text-xl font-bold text-gray-900 leading-tight group-hover:text-purple-600 transition-colors cursor-pointer">
+              {product.name}
+            </h3>
+          </Link>
+          
           <p className="text-gray-400 text-xs mt-3 line-clamp-2 font-medium leading-relaxed">
             {product.description}
           </p>
         </div>
 
         <div className="mt-auto">
-          {/* Статус наявності */}
           <div className="mb-5">
             {product.in_stock ? (
               <span className="inline-flex items-center gap-1.5 text-[10px] font-black text-green-600 uppercase tracking-widest bg-green-50 px-3 py-1 rounded-full border border-green-100">
@@ -55,15 +61,18 @@ export default function ProductCard({ product }: { product: Product }) {
             )}
           </div>
 
-          {/* Блок ціни та дії */}
           <div className="flex items-center justify-between gap-4 pt-5 border-t border-gray-50">
             <div className="flex flex-col">
               <span className="text-[9px] text-gray-400 font-black uppercase tracking-widest mb-0.5">Ціна</span>
               <span className="text-2xl font-black text-gray-950">₴{product.price}</span>
             </div>
             
+            {/* Кнопка залишається окремою, щоб не спрацьовував перехід за посиланням */}
             <button 
-              onClick={() => addToCart(product)}
+              onClick={(e) => {
+                e.preventDefault(); // На всякий випадок зупиняємо дію
+                addToCart(product);
+              }}
               disabled={!product.in_stock}
               className={`flex items-center justify-center gap-2 h-14 w-14 sm:w-auto sm:px-6 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all ${
                 product.in_stock 
