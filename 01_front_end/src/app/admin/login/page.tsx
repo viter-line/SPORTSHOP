@@ -2,81 +2,70 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { ShieldCheck, ArrowLeft, Loader2, Lock, User } from 'lucide-react';
+import { Lock, User, ChevronRight } from 'lucide-react';
 
-export default function AdminLoginPage() {
+export default function LoginPage() {
+  const [login, setLogin] = useState('');
+  const [password, setPassword] = useState('');
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    // Імітація входу для демонстрації
-    setTimeout(() => {
-      router.push('/dashboard');
-    }, 1500);
+    
+    // Тимчасова проста перевірка (замініть на реальну логіку пізніше)
+    if (login === 'admin' && password === 'admin123') {
+      localStorage.setItem('isLoggedIn', 'true');
+      router.push('/admin');
+    } else {
+      alert('Невірний логін або пароль');
+    }
   };
 
   return (
-    <div className="min-h-screen bg-[#F3F4F6] flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-[2.5rem] shadow-2xl p-10 md:p-12 relative overflow-hidden">
-        {/* Декор */}
-        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-500"></div>
-
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-600 to-purple-600 rounded-3xl shadow-xl shadow-purple-100 mb-6 rotate-3">
-            <ShieldCheck size={40} className="text-white" />
+    <main className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+      <div className="w-full max-w-md bg-white rounded-[3rem] shadow-2xl border-4 border-white overflow-hidden p-10 space-y-10">
+        <div className="text-center space-y-2">
+          <div className="w-20 h-20 bg-purple-600 text-white rounded-3xl flex items-center justify-center mx-auto shadow-xl shadow-purple-200 mb-6">
+            <Lock size={32} />
           </div>
-          <h2 className="text-3xl font-black text-gray-900 tracking-tight">
-            Sport<span className="text-purple-600">Zone</span>
-          </h2>
-          <p className="text-gray-500 text-sm font-bold uppercase tracking-[0.2em] mt-2">Панель доступу</p>
+          <h1 className="text-3xl font-black uppercase tracking-tighter">Вхід в систему</h1>
+          <p className="text-gray-400 text-xs font-bold uppercase tracking-widest">Тільки для адміністраторів</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">
           <div className="space-y-2">
-            <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Логін</label>
-            <div className="relative">
-              <User size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input 
-                type="text" 
-                placeholder="Введіть логін..."
-                className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-12 py-4 outline-none focus:ring-2 focus:ring-purple-100 focus:border-purple-400 transition-all font-medium"
-              />
-            </div>
+            <label className="text-[10px] font-black uppercase text-gray-400 ml-2 flex items-center gap-2">
+              <User size={12}/> Логін
+            </label>
+            <input 
+              required
+              className="w-full bg-gray-100 border-none rounded-2xl p-5 font-bold outline-none focus:ring-2 focus:ring-purple-500 transition-all"
+              value={login}
+              onChange={(e) => setLogin(e.target.value)}
+            />
           </div>
 
           <div className="space-y-2">
-            <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Пароль</label>
-            <div className="relative">
-              <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-              <input 
-                type="password" 
-                placeholder="••••••••"
-                className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-12 py-4 outline-none focus:ring-2 focus:ring-purple-100 focus:border-purple-400 transition-all font-medium"
-              />
-            </div>
+            <label className="text-[10px] font-black uppercase text-gray-400 ml-2 flex items-center gap-2">
+              <Lock size={12}/> Пароль
+            </label>
+            <input 
+              required
+              type="password"
+              className="w-full bg-gray-100 border-none rounded-2xl p-5 font-bold outline-none focus:ring-2 focus:ring-purple-500 transition-all"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
           </div>
 
           <button 
             type="submit"
-            className="w-full bg-gray-950 text-white font-bold py-4 rounded-2xl shadow-xl hover:bg-purple-700 transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
+            className="w-full bg-gray-950 text-white py-6 rounded-2xl font-black uppercase text-xs tracking-[0.3em] flex items-center justify-center gap-3 hover:bg-purple-600 transition-all shadow-xl active:scale-95 group"
           >
-            {loading ? <Loader2 className="animate-spin" /> : <><ShieldCheck size={20} /> Авторизуватися</>}
+            Увійти <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
           </button>
         </form>
-
-        <div className="mt-8 pt-8 border-t border-gray-50 flex flex-col items-center gap-6">
-          <div className="bg-purple-50 px-4 py-2 rounded-xl border border-purple-100">
-            <p className="text-[10px] text-purple-700 font-bold uppercase tracking-wider">Тестовий доступ: <span className="text-gray-900 ml-2">admin / admin</span></p>
-          </div>
-          
-          <Link href="/" className="flex items-center gap-2 text-gray-400 hover:text-purple-600 transition-colors text-sm font-bold">
-            <ArrowLeft size={16} /> Назад до магазину
-          </Link>
-        </div>
       </div>
-    </div>
+    </main>
   );
 }
