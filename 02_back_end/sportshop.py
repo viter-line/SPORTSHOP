@@ -15,7 +15,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-class ProductBase(BaseModel):
+class ProductCreate(BaseModel):
     name: str
     category: str
     size: str
@@ -32,6 +32,66 @@ db = mysql.connector.connect(
     host = 'localhost',
     database = 'sportshop'
 )
+
+# додаємо продукти до БД (Postman)
+@app.post("/api/products")
+async def create_product(product: ProductCreate): 
+    cursor = db.cursor()
+    sql = """
+        INSERT INTO products (name, category, size, price, rating, image_url, description, in_stock) 
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+    """
+    values = (
+        product.name, product.category, product.size, product.price, 
+        product.rating, product.image_url, product.description, product.in_stock
+    )
+    
+    cursor.execute(sql, values)
+    db.commit()
+
+    new_id = cursor.lastrowid
+    cursor.close()
+
+    return {"id": new_id, **product.model_dump()}
+
+# редагуємо товар
+@app.put("/api/products/{product_id}")
+async def update_product_endpoint(product_id: int, product: ProductCreate):
+    try:
+        cursor = db.cursor()
+        query = """
+            UPDATE products 
+            SET name = %s, category = %s, size = %s, price = %s, 
+                rating = %s, image_url = %s, description = %s, in_stock = %s
+            WHERE id = %s
+        """
+        values = (
+            product.name, product.category, product.size, product.price,
+            product.rating, product.image_url, product.description,
+            product.in_stock, product_id
+        )
+        cursor.execute(query, values)
+        db.commit()
+        
+        if cursor.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Товар не знайдено")
+            
+        cursor.close()
+        return {"status": "success", "message": "Product updated"}
+    except Exception as e:
+        print(f"Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# видаляємо товар
+@app.delete("/api/products/{product_id}")
+async def delete_product(product_id: int):
+    cursor = db.cursor()
+    query = "DELETE FROM products WHERE id = %s"
+    cursor.execute(query, (product_id,))
+    db.commit()
+    cursor.close()
+    return {"message": "Товар успішно видалений"}
+
 
 # витягуємо продукти з БД (по кількості і опису)
 @app.get("/api/products")
@@ -88,24 +148,6 @@ async def get_products(
         "total_pages": (total_count + limit - 1) // limit
     }
 
-# додаємо продукти до БД (Postman)
-@app.post("/api/create_product")
-async def create_product(product: ProductBase): 
-    cursor = db.cursor()
-    sql = """
-        INSERT INTO products (name, category, size, price, rating, image_url, description, in_stock) 
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-    """
-    values = (
-        product.name, product.category, product.size, product.price, 
-        product.rating, product.image_url, product.description, product.in_stock
-    )
-    
-    cursor.execute(sql, values)
-    db.commit()
-    
-    cursor.close()
-    return {"message": "Product created successfully!"}
 
 
 # сторінка продукту

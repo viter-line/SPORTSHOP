@@ -1,75 +1,122 @@
+// src/lib/api.ts
+
+const API_URL = "http://127.0.0.1:8000/api";
+
 /**
- * Функція для отримання списку товарів з фільтрацією, пошуком, сортуванням та пагінацією.
- * Використовується на головній сторінці (каталозі).
+ * Отримання списку товарів з пагінацією та фільтрацією
  */
 export async function fetchProducts(
   page: number = 1, 
   limit: number = 8, 
   search: string = "", 
-  category: string = "",
+  category: string = "all",
   sort_by: string = "name"
 ) {
   try {
-    const url = new URL('http://127.0.0.1:8000/api/products');
-    
-    // Додаємо обов'язкові параметри пагінації
-    url.searchParams.append('page', page.toString());
-    url.searchParams.append('limit', limit.toString());
-
-    // Додаємо пошуковий запит, якщо він переданий
-    if (search) {
-      url.searchParams.append('search', search);
-    }
-
-    // Додаємо категорію, якщо вибрано щось крім "all"
-    if (category && category !== 'all') {
-      url.searchParams.append('category', category);
-    }
-
-    // Додаємо параметр сортування
-    if (sort_by) {
-      url.searchParams.append('sort_by', sort_by);
-    }
-
-    const response = await fetch(url.toString(), { 
-      cache: 'no-store' // Вимикаємо кешування для отримання завжди актуальних даних
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      search: search,
+      category: category,
+      sort_by: sort_by
     });
 
-    if (!response.ok) {
-      console.error(`Помилка API (список): ${response.status}`);
-      return { items: [], total_pages: 0 };
-    }
+    const res = await fetch(`${API_URL}/products?${params.toString()}`, {
+      cache: 'no-store' // Щоб завжди отримувати свіжі дані з бази
+    });
 
-    return await response.json();
+    if (!res.ok) throw new Error('Помилка при завантаженні товарів');
+    return await res.json();
   } catch (error) {
-    console.error("Критична помилка fetchProducts:", error);
+    console.error("Помилка API (fetchProducts):", error);
     return { items: [], total_pages: 0 };
   }
 }
 
 /**
- * Функція для отримання детальної інформації про ОДИН товар за його ID.
- * Використовується на динамічній сторінці товару /products/[id].
+ * Отримання одного товару за його ID
  */
-export async function fetchProductById(id: string) {
+export async function fetchProductById(id: string | number) {
   try {
-    // Звертаємося до конкретного ендпоінту бекенду
-    const response = await fetch(`http://127.0.0.1:8000/api/products/${id}`, {
+    const res = await fetch(`${API_URL}/products/${id}`, {
       cache: 'no-store'
     });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (error) {
+    console.error(`Помилка API (fetchProductById ${id}):`, error);
+    return null;
+  }
+}
 
-    if (!response.ok) {
-      if (response.status === 404) {
-        console.warn(`Товар з ID ${id} не знайдено в базі даних.`);
-      } else {
-        console.error(`Помилка API (деталі): ${response.status}`);
-      }
+/**
+ * Створення нового товару (Використовується в адмінці)
+ */
+export async function createProduct(productData: any) {
+  try {
+    const res = await fetch(`${API_URL}/products`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      // Переконуємося, що дані йдуть як чистий JSON
+      body: JSON.stringify(productData),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      // Виводимо детальну помилку від FastAPI (наприклад, помилку валідації 422)
+      console.error("Деталі помилки від сервера:", data.detail);
       return null;
     }
 
-    return await response.json();
+    return data;
   } catch (error) {
-    console.error("Критична помилка fetchProductById:", error);
+    console.error("Критична помилка при відправці (createProduct):", error);
+    return null;
+  }
+}
+
+/**
+ * Видалення товару за ID (Використовується в адмінці)
+ */
+export async function deleteProduct(id: number) {
+  try {
+    const res = await fetch(`${API_URL}/products/${id}`, {
+      method: 'DELETE',
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      console.error("Не вдалося видалити товар:", errorData.detail);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Помилка при видаленні (deleteProduct):", error);
+    return false;
+  }
+}
+
+/**
+ * Оновлення існуючого товару (CRUD: Update)
+ */
+export async function updateProduct(id: number, productData: any) {
+  try {
+    const res = await fetch(`${API_URL}/products/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(productData),
+    });
+
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (error) {
+    console.error("Помилка при оновленні (updateProduct):", error);
     return null;
   }
 }
