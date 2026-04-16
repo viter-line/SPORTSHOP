@@ -5,6 +5,24 @@ const API_URL = "http://127.0.0.1:8000/api";
 /**
  * Отримання списку товарів з пагінацією та фільтрацією
  */
+
+export async function loginUser(credentials: any) {
+  try {
+    const res = await fetch(`${API_URL}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(credentials),
+    });
+
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (error) {
+    console.error("Login error:", error);
+    return null;
+  }
+}
+
+
 export async function fetchProducts(
   page: number = 1, 
   limit: number = 8, 
