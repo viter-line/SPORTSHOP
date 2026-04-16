@@ -15,6 +15,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# клас моделі логін та паролю адмінки
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+# клас моделі властивостей товару
 class ProductCreate(BaseModel):
     name: str
     category: str
@@ -32,6 +38,27 @@ db = mysql.connector.connect(
     host = 'localhost',
     database = 'sportshop'
 )
+
+# вхід в адмін панель
+@app.post("/api/login")
+async def login(request: LoginRequest):
+    print(f"Спроба входу: логін='{request.username}', пароль='{request.password}'")
+    try:
+        cursor = db.cursor(dictionary=True)
+        query = "SELECT id, username FROM admins WHERE username = %s AND password = %s"
+        cursor.execute(query, (request.username, request.password))
+        user = cursor.fetchone()
+        cursor.close()
+
+        if user:
+            return {"status": "success", "username": user['username']}
+        else:
+            raise HTTPException(status_code=401, detail="Невірний логін або пароль")
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 
 # додаємо продукти до БД (Postman)
 @app.post("/api/products")
