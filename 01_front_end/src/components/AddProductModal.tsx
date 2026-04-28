@@ -32,7 +32,7 @@ export default function AddProductModal({ isOpen, onClose, onSuccess, initialDat
         in_stock: initialData.in_stock ?? true
       });
     } else {
-      setFormData({ name: '', category: 'Спорядження', size: '', price: '', rating: '5.0', image_url: '', description: '', in_stock: true });
+      setFormData({ name: '', category: '', size: '', price: '', rating: '', image_url: '', description: '', in_stock: true });
     }
   }, [initialData, isOpen]);
 
