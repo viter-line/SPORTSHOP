@@ -21,8 +21,8 @@ export default function AdminDashboardPage() {
         
         // Приклад моку
         setProducts([
-            { id: '1', name: 'Premium Dumbbells', price: 159.99, rating: 4.8, category: 'fitness', image_url: '/dummy/dumb.jpg', description: '...', in_stock: true},
-            { id: '2', name: 'Basketball', price: 49.99, rating: 4.6, category: 'equipment', image_url: '/dummy/ball.jpg', description: '...', in_stock: false}
+            { id: 1, name: 'Premium Dumbbells', price: 159.99, rating: 4.8, category: 'fitness', image_url: '/dummy/dumb.jpg', description: '...', in_stock: true},
+            { id: 2, name: 'Basketball', price: 49.99, rating: 4.6, category: 'equipment', image_url: '/dummy/ball.jpg', description: '...', in_stock: false}
         ]);
         setLoading(false);
     }, [router]);
