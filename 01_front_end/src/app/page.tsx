@@ -1,20 +1,20 @@
 'use client'
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { fetchProducts } from '@/app/lib/api'; 
 import ProductCard from '@/components/ProductCard';
 import FilterBar from '@/components/FilterBar';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 
-export default function HomePage() {
+// Виносимо логіку в окремий внутрішній компонент
+function HomeContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
   const [data, setData] = useState({ items: [], total_pages: 0 });
   const [loading, setLoading] = useState(true);
 
-  // Зчитуємо всі актуальні параметри з адресного рядка (URL)
   const searchQuery = searchParams.get('search') || "";
   const currentPage = Number(searchParams.get('page')) || 1;
   const currentLimit = Number(searchParams.get('limit')) || 8;
@@ -24,8 +24,6 @@ export default function HomePage() {
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
-      
-      // Викликаємо API з П'ЯТЬМА параметрами
       const res = await fetchProducts(
         currentPage, 
         currentLimit, 
@@ -33,17 +31,11 @@ export default function HomePage() {
         currentCategory,
         currentSort
       );
-      
       setData(res);
       setLoading(false);
-      
-      // Плавний скрол вгору при зміні фільтрів
       window.scrollTo({ top: 0, behavior: 'smooth' });
     };
-
     loadData();
-    
-    // Ефект спрацює при зміні БУДЬ-ЯКОГО з цих значень в URL
   }, [searchQuery, currentPage, currentLimit, currentCategory, currentSort]);
 
   const handlePageChange = (newPage: number) => {
@@ -76,7 +68,6 @@ export default function HomePage() {
         )}
       </div>
 
-      {/* Пагінація */}
       {data.total_pages > 1 && (
         <div className="flex justify-center items-center gap-3 mt-16">
           <button
@@ -111,5 +102,18 @@ export default function HomePage() {
         </div>
       )}
     </main>
+  );
+}
+
+// Головний експорт з Suspense
+export default function HomePage() {
+  return (
+    <Suspense fallback={
+        <div className="flex justify-center py-40">
+            <Loader2 className="animate-spin text-purple-600" size={40} />
+        </div>
+    }>
+      <HomeContent />
+    </Suspense>
   );
 }

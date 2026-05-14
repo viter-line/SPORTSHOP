@@ -21,17 +21,36 @@ export default function AdminDashboardPage() {
         
         // Приклад моку
         setProducts([
-            { id: 1, name: 'Premium Dumbbells', price: 159.99, rating: 4.8, category: 'fitness', image_url: '/dummy/dumb.jpg', description: '...', in_stock: true},
-            { id: 2, name: 'Basketball', price: 49.99, rating: 4.6, category: 'equipment', image_url: '/dummy/ball.jpg', description: '...', in_stock: false}
+            { 
+                id: 1, name: 'Premium Dumbbells', 
+                price: 159.99, 
+                rating: 4.8, 
+                category: 'fitness', 
+                image_url: '/dummy/dumb.jpg', description: '...', 
+                in_stock: true,
+                size: 'M'
+            },
+
+            { 
+                id: 2, 
+                name: 'Basketball', 
+                price: 49.99, 
+                rating: 4.6, 
+                category: 'equipment', 
+                image_url: '/dummy/ball.jpg', 
+                description: '...', 
+                in_stock: false,
+                size: 'L'
+            }
         ]);
         setLoading(false);
     }, [router]);
 
-    const handleDelete = async (id: string) => {
+    const handleDelete = async (id: number) => {
         if (!confirm('Ви дійсно хочете видалити цей товар?')) return;
         // const token = localStorage.getItem('admin_token');
         // await deleteProduct(token, id);
-        setProducts(products.filter(p => p.id !== id));
+        setProducts(products.filter(p => p.id !== +id));
     }
 
     return (

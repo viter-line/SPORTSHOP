@@ -2,45 +2,36 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Search, ChevronDown, ListFilter } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 
-export default function FilterBar() {
+function FilterBarContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Локальний стан для тексту пошуку (Debounce)
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
 
-  // Дебаунс ефект для пошуку
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       if (searchTerm !== (searchParams.get('search') || '')) {
         updateFilters('search', searchTerm);
       }
     }, 500);
-
     return () => clearTimeout(delayDebounceFn);
   }, [searchTerm]);
 
   const updateFilters = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString());
-    
     if (value && value !== 'all') {
       params.set(key, value);
     } else {
       params.delete(key);
     }
-    
-    // Завжди скидаємо на першу сторінку при зміні будь-якого фільтра
     params.set('page', '1'); 
-    
     router.push(`?${params.toString()}`, { scroll: false });
   };
 
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-wrap items-end gap-6">
-      
-      {/* 1. Пошук */}
       <div className="flex-1 min-w-[250px]">
         <label className="text-[11px] font-bold text-purple-700 uppercase tracking-wider mb-2 block ml-1">
           Пошук товару
@@ -57,7 +48,6 @@ export default function FilterBar() {
         </div>
       </div>
 
-      {/* 2. Категорія */}
       <div className="w-full sm:w-48">
         <label className="text-[11px] font-bold text-purple-700 uppercase tracking-wider mb-2 block ml-1">
           Категорія
@@ -78,7 +68,6 @@ export default function FilterBar() {
         </div>
       </div>
 
-      {/* 3. Сортування */}
       <div className="w-full sm:w-56">
         <label className="text-[11px] font-bold text-purple-700 uppercase tracking-wider mb-2 block ml-1">
           Сортувати за
@@ -98,7 +87,6 @@ export default function FilterBar() {
         </div>
       </div>
 
-      {/* 4. Ліміт */}
       <div className="w-24">
         <label className="text-[11px] font-bold text-purple-700 uppercase tracking-wider mb-2 block ml-1 text-center">
           Показати
@@ -114,7 +102,15 @@ export default function FilterBar() {
           <option value="24">24</option>
         </select>
       </div>
-
     </div>
   );
+}
+
+// Огортаємо в Suspense, щоб Next міг зібрати білд
+export default function FilterBar() {
+    return (
+        <Suspense fallback={<div className="h-24 bg-gray-50 animate-pulse rounded-2xl" />}>
+            <FilterBarContent />
+        </Suspense>
+    );
 }
