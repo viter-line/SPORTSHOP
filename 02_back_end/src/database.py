@@ -7,10 +7,10 @@ load_dotenv()
 
 
 db_config = {
-    "host": "localhost",
-    "user": "support",
-    "password": "password123",
-    "database": "sportshop"
+    "host": "mysql-1b110275-sportshop.h.aivencloud.com",
+    "user": "avnadmin",
+    "password": "AVNS_Icj9vMXk75ziQ5kwIe6",
+    "database": "defaultdb"
 }
 
 
