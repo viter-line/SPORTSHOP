@@ -1,0 +1,5 @@
+https://sportshop-phi.vercel.app/
+
+https://dashboard.render.com/web/srv-d81f1j9kh4rs73eifhs0
+
+https://console.aiven.io/account/a5b2c5960a7e/project/sportshop/services/mysql-1b110275/overview
