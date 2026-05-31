@@ -8,7 +8,7 @@ export default function ContactsPage() {
         {/* Ліва частина: Інфо */}
         <div>
           <h1 className="text-6xl font-black uppercase tracking-tighter mb-10">
-            Зв'яжіться <br/> з <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-500">намі</span>
+            Зв'яжіться <br/> з <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-500">нами</span>
           </h1>
           
           <div className="space-y-8">
@@ -18,7 +18,7 @@ export default function ContactsPage() {
               </div>
               <div>
                 <p className="text-xs font-black uppercase tracking-widest text-gray-400 mb-1">Телефон</p>
-                <p className="text-xl font-bold">+38 (097) 123 45 67</p>
+                <p className="text-xl font-bold">+38 (000) 000 00 00</p>
               </div>
             </div>
 
@@ -38,19 +38,19 @@ export default function ContactsPage() {
               </div>
               <div>
                 <p className="text-xs font-black uppercase tracking-widest text-gray-400 mb-1">Локація</p>
-                <p className="text-xl font-bold">м. Київ, вул. Спортивна, 1</p>
+                <p className="text-xl font-bold">м. Львів, вул. Львівска, 1</p>
               </div>
             </div>
           </div>
 
-          <div className="mt-12 flex gap-4">
+          {/* <div className="mt-12 flex gap-4">
             <button className="w-12 h-12 rounded-xl border border-gray-200 flex items-center justify-center hover:bg-black hover:text-white transition-all">
               
             </button>
             <button className="w-12 h-12 rounded-xl border border-gray-200 flex items-center justify-center hover:bg-black hover:text-white transition-all">
               
             </button>
-          </div>
+          </div> */}
         </div>
 
         {/* Права частина: Форма */}

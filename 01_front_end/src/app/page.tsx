@@ -6,8 +6,11 @@ import { fetchProducts } from '@/app/lib/api';
 import ProductCard from '@/components/ProductCard';
 import FilterBar from '@/components/FilterBar';
 import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import ChatWindow from "@/components/ChatWidget";
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
-// Виносимо логіку в окремий внутрішній компонент
+// Внутрішній компонент з логікою товарів
 function HomeContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -105,15 +108,39 @@ function HomeContent() {
   );
 }
 
-// Головний експорт з Suspense
+// Головний єдиний експорт сторінки
 export default function HomePage() {
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const currentUserId = 5; // Тимчасовий ID для тесту вебсокета
+
   return (
-    <Suspense fallback={
-        <div className="flex justify-center py-40">
-            <Loader2 className="animate-spin text-purple-600" size={40} />
-        </div>
-    }>
-      <HomeContent />
-    </Suspense>
+    <div className="relative min-h-screen">
+      <Suspense fallback={
+          <div className="flex justify-center py-40">
+              <Loader2 className="animate-spin text-purple-600" size={40} />
+          </div>
+      }>
+        <HomeContent />
+      </Suspense>
+
+      {/* ФЛАВАЮЧИЙ ВІДЖЕТ ЧАТУ ДЛЯ КЛІЄНТІВ */}
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
+        {isChatOpen && (
+          <div className="w-80 h-[450px] mb-4 shadow-2xl rounded-xl overflow-hidden border border-gray-200 bg-white">
+            <ChatWindow roomId={currentUserId} />
+          </div>
+        )}
+        
+        <button
+          onClick={() => setIsChatOpen(!isChatOpen)}
+          className="bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-full shadow-lg transition-all transform hover:scale-105 active:scale-95 text-2xl"
+        >
+          {isChatOpen ? "❌" : "💬"}
+        </button>
+      </div>
+
+      <Analytics />
+      <SpeedInsights />
+    </div>
   );
 }

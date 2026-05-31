@@ -22,9 +22,18 @@ export default function LoginPage() {
       const result = await loginUser({ username, password });
 
       if (result && result.status === 'success') {
-        // Зберігаємо статус входу
+        // 1. Зберігаємо статус входу та користувача
         localStorage.setItem('isLoggedIn', 'true');
         localStorage.setItem('adminUser', result.username);
+        
+        // 2. ЗАПИСУЄМО ТОКЕН (Підстраховка, якщо api.ts не записав його автоматично)
+        // FastAPI зазвичай повертає token або access_token всередині відповіді
+        const token = result.access_token || result.token || result.data?.access_token;
+        if (token) {
+          localStorage.setItem('token', token);
+        } else {
+          console.warn("Бекенд відповів 'success', але не передав токен в об'єкті:", result);
+        }
         
         // Перенаправляємо в адмін-панель
         router.push('/admin');
