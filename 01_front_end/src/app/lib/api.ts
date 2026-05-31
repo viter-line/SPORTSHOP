@@ -1,11 +1,30 @@
 // src/lib/api.ts
 
-const API_URL = "https://sportshop-mnfh.onrender.com/api";
+const API_URL = "http://0.0.0.0:8000/api";
 
 /**
- * Отримання списку товарів з пагінацією та фільтрацією
+ * Хелпер для безпечного отримання чистого JWT-токена
  */
+function getCleanToken(): string {
+  const rawToken = localStorage.getItem('token');
+  if (!rawToken) {
+    return ""; 
+  }
 
+  if (rawToken.startsWith('{') || rawToken.startsWith('"')) {
+    try {
+      const parsed = JSON.parse(rawToken);
+      return parsed.access_token || parsed.token || rawToken;
+    } catch (e) {
+      return rawToken;
+    }
+  }
+  return rawToken;
+}
+
+/**
+ * Авторизація користувача (отримання токена)
+ */
 export async function loginUser(credentials: any) {
   try {
     const res = await fetch(`${API_URL}/login`, {
@@ -15,14 +34,26 @@ export async function loginUser(credentials: any) {
     });
 
     if (!res.ok) return null;
-    return await res.json();
+    const data = await res.json();
+    
+    // Автоматично зберігаємо токен у Local Storage при успішному вході
+    if (data) {
+      const tokenValue = data.access_token || data.token;
+      if (tokenValue) {
+        localStorage.setItem('token', tokenValue);
+      }
+    }
+
+    return data;
   } catch (error) {
     console.error("Login error:", error);
     return null;
   }
 }
 
-
+/**
+ * Отримання списку товарів з пагінацією та фільтрацією
+ */
 export async function fetchProducts(
   page: number = 1, 
   limit: number = 8, 
@@ -40,10 +71,15 @@ export async function fetchProducts(
     });
 
     const res = await fetch(`${API_URL}/products?${params.toString()}`, {
-      cache: 'no-store' // Щоб завжди отримувати свіжі дані з бази
+      cache: 'no-store'
     });
 
-    if (!res.ok) throw new Error('Помилка при завантаженні товарів');
+    if (!res.ok) {
+      const errText = await res.text();
+      console.error(`Бекенд повернув помилку ${res.status}:`, errText);
+      throw new Error('Помилка при завантаженні товарів');
+    }
+
     return await res.json();
   } catch (error) {
     console.error("Помилка API (fetchProducts):", error);
@@ -72,20 +108,21 @@ export async function fetchProductById(id: string | number) {
  */
 export async function createProduct(productData: any) {
   try {
+    const token = getCleanToken();
+
     const res = await fetch(`${API_URL}/products`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
       },
-      // Переконуємося, що дані йдуть як чистий JSON
       body: JSON.stringify(productData),
     });
 
     const data = await res.json();
 
     if (!res.ok) {
-      // Виводимо детальну помилку від FastAPI (наприклад, помилку валідації 422)
-      console.error("Деталі помилки від сервера:", data.detail);
+      console.error("Деталі помилки від сервера:", data?.detail || data);
       return null;
     }
 
@@ -97,17 +134,23 @@ export async function createProduct(productData: any) {
 }
 
 /**
- * Видалення товару за ID (Використовується в адмінці)
+ * Видалення товару за ID (Використовусь в адмінці)
  */
 export async function deleteProduct(id: number) {
   try {
+    const token = getCleanToken();
+
     const res = await fetch(`${API_URL}/products/${id}`, {
       method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      },
     });
 
     if (!res.ok) {
       const errorData = await res.json();
-      console.error("Не вдалося видалити товар:", errorData.detail);
+      console.error("Не вдалося видалити товар:", errorData?.detail || errorData);
       return false;
     }
 
@@ -123,16 +166,25 @@ export async function deleteProduct(id: number) {
  */
 export async function updateProduct(id: number, productData: any) {
   try {
+    const token = getCleanToken();
+
     const res = await fetch(`${API_URL}/products/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
       },
       body: JSON.stringify(productData),
     });
 
-    if (!res.ok) return null;
-    return await res.json();
+    const data = await res.json();
+
+    if (!res.ok) {
+      console.error("Не вдалося оновити товар:", data?.detail || data);
+      return null;
+    }
+    
+    return data;
   } catch (error) {
     console.error("Помилка при оновленні (updateProduct):", error);
     return null;

@@ -12,4 +12,4 @@ def get_current_admin(authorization: str = Header(None)):
     if payload is None:
         raise HTTPException(status_code=401, detail="Невалідний або протермінований токен")
     
-    return payload # Повертає дані адміна з токена
+    return payload # дані адміна з токена на базу

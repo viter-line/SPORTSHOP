@@ -16,3 +16,21 @@ const eslintConfig = defineConfig([
 ]);
 
 export default eslintConfig;
+
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  // Твої поточні налаштування, якщо вони там є...
+  
+  webpack: (config, { dev, isServer }) => {
+    // Налаштовуємо WebSocket для HMR тільки у режимі розробки
+    if (dev && !isServer) {
+      config.watchOptions = {
+        poll: 1000, // Перевіряти зміни коду кожну секунду (ідеально для Docker на Linux)
+        aggregateTimeout: 300,
+      };
+    }
+    return config;
+  },
+};
+
+export default nextConfig;

@@ -1,0 +1,57 @@
+# version: '3.8'
+
+services:
+  # База даних MySQL
+  mysql_db:
+    image: mysql:8.0
+    container_name: sportstore_mysql
+    restart: always
+    environment:
+      MYSQL_DATABASE: sportstore_db
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_USER: store_user
+      MYSQL_PASSWORD: store_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  # Бекенд (FastAPI)
+  backend:
+    build:
+      context: ./02_backend
+      dockerfile: Dockerfile
+    container_name: sportstore_backend
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      # Прокидаємо весь вміст 02_backend у внутрішню папку /app контейнера
+      - ./02_backend:/app
+    environment:
+      - DATABASE_URL=mysql+pymysql://store_user:store_password@mysql_db:3306/sportstore_db
+    depends_on:
+      - mysql_db
+
+  # Фронтенд (Next.js)
+  frontend:
+    build:
+      context: ./01_frontend
+      dockerfile: Dockerfile
+    container_name: sportstore_frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      # Прокидаємо весь вміст 01_frontend у внутрішню папку /app контейнера
+      - ./01_frontend:/app
+      # Захищаємо локальний Node/Next кеш від затирання контейнером
+      - /app/.next
+      - /app/node_modules
+    environment:
+      - NEXT_PUBLIC_API_URL=http://192.168.0.107:8000/api
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:
