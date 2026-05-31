@@ -2,30 +2,26 @@
 
 import { useEffect, useState, useRef } from 'react';
 
+// 1. Описуємо інтерфейс для пропсів, які компонент приймає ззовні (з page.tsx)
+interface ChatWindowProps {
+  roomId: string | number;
+}
+
 interface Message {
   sender_id: string;
   text?: string;
   message?: string;
 }
 
-export default function ChatWidget() {
+// 2. Змінюємо назву функції на ChatWindow, щоб вона збігалася з page.tsx, 
+// та приймаємо деструктуризований roomId
+export default function ChatWindow({ roomId }: ChatWindowProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const ws = useRef<WebSocket | null>(null);
 
-  // Генеруємо стійкий ID клієнта, щоб чат не скидався при перезавантаженні сторінки
-  const [clientId, setClientId] = useState<string>('');
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      let storedId = localStorage.getItem('chat_client_id');
-      if (!storedId) {
-        storedId = 'client_' + Math.random().toString(36).substring(2, 9);
-        localStorage.setItem('chat_client_id', storedId);
-      }
-      setClientId(storedId);
-    }
-  }, []);
+  // Перетворюємо roomId на рядок, щоб уникнути конфліктів із типами
+  const clientId = String(roomId);
 
   const currentHost = typeof window !== 'undefined' ? window.location.hostname : '192.168.0.107';
   
@@ -51,7 +47,7 @@ export default function ChatWidget() {
   };
 
   useEffect(() => {
-    if (!clientId) return;
+    if (!clientId || clientId === "undefined") return;
 
     loadHistory();
 
@@ -99,7 +95,7 @@ export default function ChatWidget() {
   const safeMessages = Array.isArray(messages) ? messages : [];
 
   return (
-    <div className="fixed bottom-6 right-6 w-80 bg-white shadow-2xl rounded-2xl border border-gray-100 p-4 z-50">
+    <div className="fixed bottom-6 right-6 w-80 bg-white shadow-2xl rounded-2xl border border-gray-100 p-4 z-50 text-black">
       <h3 className="font-black uppercase tracking-tight text-sm border-b pb-2 mb-2 text-gray-950">
         Чат з підтримкою
       </h3>
@@ -136,13 +132,13 @@ export default function ChatWidget() {
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           placeholder="Напишіть повідомлення..."
-          className="flex-1 bg-gray-50 border border-transparent rounded-xl px-3 py-2 text-xs font-bold outline-none focus:border-purple-500 focus:bg-white transition-all"
+          className="flex-1 bg-gray-50 border border-transparent rounded-xl px-3 py-2 text-xs font-bold outline-none focus:border-purple-500 focus:bg-white transition-all placeholder-gray-400"
         />
         <button 
           type="submit" 
           className="bg-gray-950 text-white px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider hover:bg-purple-600 transition-colors"
         >
-          Надіслати
+          Гайда
         </button>
       </form>
     </div>
