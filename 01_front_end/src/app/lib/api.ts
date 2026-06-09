@@ -1,6 +1,6 @@
 // src/lib/api.ts
 
-const API_URL = "http://0.0.0.0:8000/api";
+const API_URL = "http://localhost:8000/api";
 
 /**
  * Хелпер для безпечного отримання чистого JWT-токена

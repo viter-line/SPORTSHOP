@@ -1,7 +1,6 @@
-# version: '3.8'
 
 services:
-  # База даних MySQL
+  # 1. База даних MySQL
   mysql_db:
     image: mysql:8.0
     container_name: sportstore_mysql
@@ -16,40 +15,49 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
 
-  # Бекенд (FastAPI)
+# 1.1 брокер 
+  redis_broker:
+    image: redis:7.2-alpine
+    container_name: sportstore_redis
+    restart: always
+    ports:
+      - "6379:6379"
+
+  # 2. Бекенд (FastAPI)
   backend:
     build:
-      context: ./02_backend
+      context: ./02_back_end
       dockerfile: Dockerfile
     container_name: sportstore_backend
     restart: always
     ports:
       - "8000:8000"
     volumes:
-      # Прокидаємо весь вміст 02_backend у внутрішню папку /app контейнера
-      - ./02_backend:/app
+      # Прокидаємо код для Hot Reload
+      - ./02_back_end:/app
     environment:
-      - DATABASE_URL=mysql+pymysql://store_user:store_password@mysql_db:3306/sportstore_db
+      DATABASE_URL: "mysql+pymysql://store_user:store_password@mysql_db:3306/sportstore_db"
     depends_on:
       - mysql_db
+      - redis_broker # Додаємо залежність
 
-  # Фронтенд (Next.js)
+  # 3. Фронтенд (Next.js)
   frontend:
     build:
-      context: ./01_frontend
+      context: ./01_front_end
       dockerfile: Dockerfile
     container_name: sportstore_frontend
     restart: always
     ports:
       - "3000:3000"
     volumes:
-      # Прокидаємо весь вміст 01_frontend у внутрішню папку /app контейнера
-      - ./01_frontend:/app
-      # Захищаємо локальний Node/Next кеш від затирання контейнером
+      # Прокидаємо код для Hot Reload
+      - ./01_front_end:/app
+      # Захищаємо внутрішні модулі та кеш контейнера від затирання локальною папкою
       - /app/.next
       - /app/node_modules
     environment:
-      - NEXT_PUBLIC_API_URL=http://192.168.0.107:8000/api
+      NEXT_PUBLIC_API_URL: "http://localhost:8000/api"
     depends_on:
       - backend
 

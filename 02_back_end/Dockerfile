@@ -1,5 +1,6 @@
 FROM python:3.11-slim
 
+# Встановлюємо системні залежності для компіляції пакетів (наприклад, для бази даних)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libmariadb-dev \
@@ -8,12 +9,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
+# Копіюємо та встановлюємо залежності Python
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Копіюємо все, що є в 02_backend (включаючи твою папку src або файли)
+# Копіюємо всі файли проекту (включаючи вашу папку src)
 COPY . .
 
 EXPOSE 8000
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# Запуск Uvicorn. Зверніть увагу на src.main:app та прапорець --reload
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

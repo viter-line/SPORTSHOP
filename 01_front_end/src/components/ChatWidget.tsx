@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 
-// 1. Описуємо інтерфейс для пропсів, які компонент приймає ззовні (з page.tsx)
+// 1. Описуємо інтерфейс для пропсів, які компонент приймає ззовні
 interface ChatWindowProps {
   roomId: string | number;
 }
@@ -13,8 +13,6 @@ interface Message {
   message?: string;
 }
 
-// 2. Змінюємо назву функції на ChatWindow, щоб вона збігалася з page.tsx, 
-// та приймаємо деструктуризований roomId
 export default function ChatWindow({ roomId }: ChatWindowProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
@@ -23,72 +21,95 @@ export default function ChatWindow({ roomId }: ChatWindowProps) {
   // Перетворюємо roomId на рядок, щоб уникнути конфліктів із типами
   const clientId = String(roomId);
 
-  const currentHost = typeof window !== 'undefined' ? window.location.hostname : '192.168.0.107';
-  
-  // Маршрути відповідно до конфігурації твого FastAPI роутера
-  const BACKEND_HISTORY_URL = `http://${currentHost}:8000/api/v1/chat/ws/history/${clientId}`;
-  const BACKEND_WS_URL = `ws://${currentHost}:8000/api/v1/chat/ws/${clientId}`;
-
-  const loadHistory = async () => {
-    if (!clientId) return;
-    try {
-      const res = await fetch(BACKEND_HISTORY_URL);
-      if (res.ok) {
-        const data = await res.json();
-        if (Array.isArray(data)) {
-          setMessages(data);
-        } else if (data && Array.isArray(data.messages)) {
-          setMessages(data.messages);
-        }
-      }
-    } catch (err) {
-      console.error("Не вдалося завантажити історію чату:", err);
-    }
-  };
-
   useEffect(() => {
     if (!clientId || clientId === "undefined") return;
 
+    // Динамічно визначаємо хост всередині ефекту, щоб уникнути зайвих рендерів
+    const currentHost = typeof window !== 'undefined' ? window.location.hostname : '192.168.0.107';
+    
+    // Якщо ти деплоїш бекенд на Render, заміни адресу на 'wss://твоя-адреса.onrender.com/api/v1/chat/ws'
+    // Для локального тесту використовуємо поточний хост і ws://
+    const BACKEND_HISTORY_URL = `http://${currentHost}:8000/api/v1/chat/ws/history/${clientId}`;
+    const BACKEND_WS_URL = `ws://${currentHost}:8000/api/v1/chat/ws/${clientId}`;
+
+    const loadHistory = async () => {
+      try {
+        const res = await fetch(BACKEND_HISTORY_URL);
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data)) {
+            setMessages(data);
+          } else if (data && Array.isArray(data.messages)) {
+            setMessages(data.messages);
+          }
+        }
+      } catch (err) {
+        console.error("Не вдалося завантажити історію чату:", err);
+      }
+    };
+
+    // Спочатку завантажуємо історію
     loadHistory();
 
-    ws.current = new WebSocket(BACKEND_WS_URL);
+    // Створюємо WebSocket з'єднання
+    const socket = new WebSocket(BACKEND_WS_URL);
+    ws.current = socket;
 
-    ws.current.onmessage = (event) => {
+    socket.onopen = () => {
+      console.log(`Успішно підключено до чату. Клієнт: ${clientId}`);
+    };
+
+    socket.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
+        // Перевіряємо, що прийшов саме об'єкт повідомлення
         if (data && typeof data === 'object' && !Array.isArray(data)) {
-          setMessages((prev) => [...prev, data]);
+          setMessages((prev) => {
+            // Запобігаємо дублюванню (якщо таке повідомлення вже є в стейті)
+            const isDuplicate = prev.some(
+              (msg) => msg.sender_id === data.sender_id && (msg.text === data.text || msg.message === data.text)
+            );
+            return isDuplicate ? prev : [...prev, data];
+          });
         }
       } catch (err) {
         console.error("Помилка обробки WebSocket повідомлення:", err);
       }
     };
 
-    ws.current.onerror = (error) => {
+    socket.onerror = (error) => {
       console.error("Помилка WebSocket з'єднання:", error);
     };
 
+    // Cleanup функція: закриваємо сокет саме цього ефекту при розмонтуванні
     return () => {
-      ws.current?.close();
+      if (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING) {
+        socket.close();
+      }
     };
   }, [clientId]);
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputValue.trim() || !ws.current || ws.current.readyState !== WebSocket.OPEN) {
-      console.warn("З'єднання не встановлено. Спробуйте пізніше.");
+    
+    if (!inputValue.trim()) return;
+
+    if (!ws.current || ws.current.readyState !== WebSocket.OPEN) {
+      console.warn("З'єднання не встановлено або розірвано. Спробуйте пізніше.");
       return;
     }
 
     const messageData = {
-      recipient_id: "admin", // Бекенд чекає recipient_id
+      recipient_id: "admin", // Кому відправляємо (адміністратору)
       text: inputValue.trim()
     };
 
+    // Відправляємо на бекенд
     ws.current.send(JSON.stringify(messageData));
     
-    // Відображаємо повідомлення у себе на екрані
-    setMessages((prev) => [...prev, { sender_id: clientId, text: inputValue.trim() }]);
+    // Оскільки бекенд тепер дзеркально повертає повідомлення автору, 
+    // МИ НЕ додаємо його в стейт вручну тут, щоб уникнути дублів.
+    // Воно прилетить в `onmessage` автоматично за мілісекунду!
     setInputValue('');
   };
 
@@ -107,7 +128,8 @@ export default function ChatWindow({ roomId }: ChatWindowProps) {
           </div>
         ) : (
           safeMessages.map((msg, idx) => {
-            const isClient = msg.sender_id !== "admin";
+            // Якщо sender_id збігається з clientId поточного користувача — це клієнт (пурпуровий колір)
+            const isClient = msg.sender_id === clientId;
             const messageText = msg.text || msg.message || ""; 
 
             return (

@@ -45,7 +45,12 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
     await manager.connect(user_id, websocket)
     try:
         while True:
-            data = await websocket.receive_json()
+            # Використовуємо try всередині циклу, щоб при битому повідомленні сокет не вмирав
+            try:
+                data = await websocket.receive_json()
+            except Exception as json_err:
+                # Якщо прилетів не JSON або пустий пакет при коннекті — ігноруємо, а не закриваємо сокет
+                continue
             
             recipient_id = data.get("recipient_id")
             message_text = data.get("text")
@@ -53,16 +58,25 @@ async def websocket_endpoint(websocket: WebSocket, user_id: str):
             if not recipient_id or not message_text:
                 continue
 
+            # Зберігаємо в базу даних
             crud.save_message(sender_id=user_id, recipient_id=recipient_id, text=message_text)
             
             payload = {
                 "sender_id": user_id,
+                "recipient_id": recipient_id,
                 "text": message_text
             }
             
+            # 1. Відправляємо отримувачу (якщо він онлайн)
             await manager.send_personal_message(payload, recipient_id)
             
+            # 2. ОБОВ'ЯЗКОВО відправляємо назад автору, щоб фронтенд підтвердив доставку
+            await manager.send_personal_message(payload, user_id)
+            
     except WebSocketDisconnect:
+        manager.disconnect(user_id)
+    except Exception as e:
+        print(f"Непередбачувана помилка в сокеті для {user_id}: {e}")
         manager.disconnect(user_id)
 
 @router.get("/admin/unanswered-count")

@@ -25,16 +25,7 @@ app = FastAPI(
 app.include_router(products_router)
 app.include_router(auth_router)
 
-origins = [
-    "https://sportshop-phi.vercel.app",  
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost:5173",
-    "http://192.168.0.107:3000",
-    "http://127.0.0.1:8000",
-    "http://127.0.0.1:3000",
-    "http://0.0.0.0:8000"         
-]
+origins = []
 
 app.add_middleware(
     CORSMiddleware,
