@@ -7,21 +7,21 @@ services:
     restart: always
     environment:
       MYSQL_DATABASE: sportstore_db
-      MYSQL_ROOT_PASSWORD: root_password
-      MYSQL_USER: store_user
-      MYSQL_PASSWORD: store_password
+      MYSQL_ROOT_PASSWORD:
+      MYSQL_USER: support
+      MYSQL_PASSWORD: password123
     ports:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
 
 # 1.1 брокер 
-  redis_broker:
-    image: redis:7.2-alpine
-    container_name: sportstore_redis
-    restart: always
-    ports:
-      - "6379:6379"
+  # redis_broker:
+  #   image: redis:7.2-alpine
+  #   container_name: sportstore_redis
+  #   restart: always
+  #   ports:
+  #     - "6379:6379"
 
   # 2. Бекенд (FastAPI)
   backend:
@@ -39,7 +39,7 @@ services:
       DATABASE_URL: "mysql+pymysql://store_user:store_password@mysql_db:3306/sportstore_db"
     depends_on:
       - mysql_db
-      - redis_broker # Додаємо залежність
+      # - redis_broker # Додаємо залежність
 
   # 3. Фронтенд (Next.js)
   frontend:

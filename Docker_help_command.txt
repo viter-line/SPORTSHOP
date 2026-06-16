@@ -1,0 +1,6 @@
+docker system df - аналіз зайнятого місця;
+docker system prune -a --volumes  - видалити все одразу з числа тих, котрі не використовуюються;
+
+docker image prune -a      # старі образи
+docker volume prune        # невикористані volumes
+docker builder prune       # build cache
